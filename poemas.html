@@ -2143,6 +2143,7 @@
       currentLang = (currentLang === 'pt') ? 'en' : 'pt';
       localStorage.setItem('preferredLang', currentLang);
       applyLanguage(currentLang);
+      if (document.getElementById('adminPoemList')) renderAdminList();
     }
 
     function applyLanguage(lang) {
@@ -2568,7 +2569,7 @@
         const dateLabel = formatPoemDate(p.date);
         div.innerHTML = `
           <div class="info">
-            <strong>${p.pinned ? '<span class="pin-flag">📌</span>' : ''}${escapeHtml(p.title_pt)}</strong>
+            <strong>${p.pinned ? '<span class="pin-flag">📌</span>' : ''}${escapeHtml(currentLang === 'en' ? (p.title_en || p.title_pt) : p.title_pt)}</strong>
             <small>${authorLabel} • ${p.likes || 0} ❤️${dateLabel ? ' • ' + dateLabel : ''}</small>
           </div>
           <div class="actions">
