@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Versos & Cochichos</title>
+  <link rel="icon" type="image/png" href="https://iili.io/CRjSLmu.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
+
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
+
+  <style>
+    /* === CSS original (sem alterações) === */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Inter, sans-serif;
+      background: linear-gradient(180deg, #fffdf9, #f5ece3);
+      color: #352d28;
+      overflow-x: hidden;
+      padding-top: 80px;
+    }
+    body:before,
+    body:after {
+      content: "";
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(70px);
+      z-index: -1;
+    }
+    body:before {
+      width: 280px;
+      height: 280px;
+      background: #ead7c4;
+      top: -80px;
+      left: -80px;
+    }
+    body:after {
+      width: 320px;
+      height: 320px;
+      background: #f0d4cb;
+      bottom: -100px;
+      right: -100px;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      padding: 24px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 253, 249, .75);
+      backdrop-filter: blur(12px);
+      z-index: 1000;
+      border-bottom: 1px solid rgba(184, 92, 56, .08);
+      flex-wrap: wrap;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    nav a {
+      text-decoration: none;
+      color: #5c4c41;
+      font-weight: 600;
+    }
+    .nav-buttons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .lang-switcher,
+    .login-btn,
+    .logout-btn,
+    .admin-btn {
+      background: #b85c38;
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: Inter, sans-serif;
+    }
+    .logout-btn {
+      background: #7d6f66;
+    }
+    .admin-btn {
+      background: #7d6f66;
+    }
+    .user-greeting {
+      font-weight: 600;
+      color: #5c4c41;
+      font-size: .95rem;
+    }
+    .avatar-wrap {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid #b85c38;
+      flex-shrink: 0;
+      background: #e8ddd2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .avatar-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .avatar-preview-wrap {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 8px auto 18px;
+      cursor: pointer;
+    }
+    .avatar-preview-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: #e8ddd2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 3px solid #fffdf9;
+      box-shadow: 0 0 0 3px #b85c38, 0 10px 26px rgba(184, 92, 56, .28);
+      transition: box-shadow .3s ease, transform .3s ease;
+    }
+    .avatar-preview-wrap:hover .avatar-preview-circle {
+      transform: scale(1.05);
+    }
+    .avatar-preview-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .avatar-preview-badge {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #b85c38;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 3px solid #fffdf9;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, .18);
+    }
+    .avatar-preview-badge svg {
+      width: 15px;
+      height: 15px;
+    }
+    .avatar-input-label {
+      display: block;
+      text-align: center;
+      font-size: .74rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #a68a76;
+      font-weight: 700;
+      margin: 0 0 8px;
+    }
+    .avatar-url-input {
+      text-align: center;
+      border-radius: 999px !important;
+      padding: 12px 20px !important;
+      font-size: .9rem;
+    }
+    .hero {
+      min-height: 85vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+    }
+    .box {
+      max-width: 760px;
+      text-align: center;
+      background: rgba(255, 255, 255, .45);
+      backdrop-filter: blur(18px);
+      padding: 60px;
+      border: 1px solid rgba(255, 255, 255, .6);
+      border-radius: 28px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, .08);
+    }
+    h1 {
+      font: 600 5rem "Cormorant Garamond", serif;
+      color: #7d4a36;
+    }
+    .lead {
+      font-size: 1.2rem;
+      color: #6c5d53;
+      margin: 20px 0 35px;
+      line-height: 1.8;
+    }
+    .line {
+      width: 90px;
+      height: 2px;
+      background: #b85c38;
+      margin: 25px auto;
+    }
+    .btns {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 14px 30px;
+      border-radius: 40px;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .primary {
+      background: #b85c38;
+      color: #fff;
+    }
+    .secondary {
+      border: 1px solid #b85c38;
+      color: #b85c38;
+    }
+    .quote {
+      margin-top: 40px;
+      font-style: italic;
+      color: #7d6f66;
+    }
+    .features {
+      max-width: 1000px;
+      margin: 0 auto 80px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 24px;
+      padding: 20px;
+    }
+    .card {
+      background: rgba(255, 255, 255, .45);
+      backdrop-filter: blur(12px);
+      padding: 28px;
+      border-radius: 22px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .06);
+      border: 1px solid rgba(255, 255, 255, .6);
+    }
+    .card h3 {
+      font-family: "Cormorant Garamond", serif;
+      font-size: 2rem;
+      color: #7d4a36;
+      margin-bottom: 10px;
+    }
+    footer {
+      text-align: center;
+      padding: 35px;
+      color: #7d6f66;
+      background: rgba(255, 253, 249, .3);
+      backdrop-filter: blur(4px);
+      border-top: 1px solid rgba(255, 255, 255, .2);
+    }
+    .hidden {
+      display: none !important;
+    }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, .4);
+      backdrop-filter: blur(5px);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .modal-box {
+      background: #fffdf9;
+      border-radius: 24px;
+      padding: 40px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .15);
+      position: relative;
+    }
+    .modal-box h2 {
+      font: 600 2.2rem "Cormorant Garamond", serif;
+      color: #7d4a36;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .modal-box label {
+      display: block;
+      font-weight: 600;
+      color: #5c4c41;
+      margin: 12px 0 4px;
+    }
+    .modal-box input,
+    .modal-box textarea,
+    .modal-box select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d8c9bc;
+      border-radius: 10px;
+      font-family: Inter, sans-serif;
+      background: rgba(255, 255, 255, .5);
+    }
+    .modal-box input:focus,
+    .modal-box textarea:focus {
+      border-color: #b85c38;
+      outline: none;
+    }
+    .modal-box .btn-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .modal-box .btn-row button,
+    .modal-box .admin-footer button {
+      padding: 12px 28px;
+      border: none;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: .95rem;
+      cursor: pointer;
+      font-family: Inter, sans-serif;
+      transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+    }
+    .modal-box .btn-row .btn-primary,
+    .modal-box .admin-footer .btn-primary {
+      background: #b85c38;
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(184, 92, 56, .3);
+    }
+    .modal-box .btn-row .btn-primary:hover,
+    .modal-box .admin-footer .btn-primary:hover {
+      background: #9c4a2b;
+    }
+    .modal-box .btn-row .btn-secondary,
+    .modal-box .admin-footer .btn-secondary {
+      background: #f5ece3;
+      color: #7d4a36;
+      border: 1px solid rgba(184, 92, 56, .25);
+    }
+    .modal-box .btn-row .btn-secondary:hover,
+    .modal-box .admin-footer .btn-secondary:hover {
+      background: #ead7c4;
+    }
+    .modal-box .close-modal {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      color: #7d6f66;
+    }
+    .modal-box .close-modal:hover {
+      color: #b85c38;
+    }
+    #adminModal {
+      z-index: 1100;
+      align-items: center;
+      background: rgba(40, 30, 25, 0.45);
+      backdrop-filter: blur(10px);
+    }
+    #adminModal .modal-box {
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
+    }
+    .admin-tabs {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+      border-bottom: 1px solid #e8ddd2;
+      padding-bottom: 12px;
+    }
+    .admin-tabs button {
+      background: none;
+      border: none;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      color: #5c4c41;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .admin-tabs button.active {
+      background: #b85c38;
+      color: #fff;
+    }
+    .admin-tabs button:hover:not(.active) {
+      background: #e8ddd2;
+    }
+    .admin-list {
+      max-height: 300px;
+      overflow-y: auto;
+      margin: 15px 0;
+    }
+    .admin-list::-webkit-scrollbar {
+      width: 5px;
+    }
+    .admin-list::-webkit-scrollbar-thumb {
+      background: #d8c9bc;
+      border-radius: 10px;
+    }
+    .admin-poem-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid #e8ddd2;
+      transition: background 0.3s;
+    }
+    .admin-poem-item.pinned {
+      background: rgba(184, 92, 56, 0.08);
+      border-radius: 10px;
+    }
+    .admin-poem-item .info {
+      flex: 1;
+    }
+    .admin-poem-item .info strong {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .admin-poem-item .info .pin-flag {
+      color: #b85c38;
+      font-size: .9rem;
+    }
+    .admin-poem-item .info small {
+      display: block;
+      color: #7d6f66;
+    }
+    .admin-poem-item .actions {
+      display: flex;
+      gap: 8px;
+    }
+    .admin-poem-item .actions button {
+      padding: 4px 12px;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .admin-poem-item .actions .edit-btn {
+      background: #2a5c6e;
+      color: #fff;
+    }
+    .admin-poem-item .actions .edit-btn:hover {
+      background: #1d4452;
+    }
+    .admin-poem-item .actions .pin-btn {
+      background: #d8c9bc;
+      color: #5c4c41;
+    }
+    .admin-poem-item .actions .pin-btn:hover {
+      background: #cbb8a7;
+    }
+    .admin-poem-item .actions .pin-btn.active {
+      background: #b85c38;
+      color: #fff;
+    }
+    .admin-poem-item .actions .del-btn {
+      background: none !important;
+      border: none;
+      color: #b85c38 !important;
+      opacity: .6 !important;
+      font-weight: 400 !important;
+      cursor: pointer;
+      font-size: 1rem !important;
+      padding: 4px 6px !important;
+      line-height: 1;
+      flex-shrink: 0;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .admin-poem-item .actions .del-btn:hover {
+      opacity: 1 !important;
+      transform: scale(1.15);
+      background: none !important;
+    }
+    .error-msg {
+      color: #b13e3e;
+      font-size: .9rem;
+      margin-top: 6px;
+    }
+    @media(max-width:700px) {
+      h1 {
+        font-size: 3.4rem;
+      }
+      .box {
+        padding: 35px;
+      }
+      nav {
+        gap: 10px;
+      }
+    }
+  
+    /* ================================================================
+       ✦ UPGRADE VISUAL — janelas, avatares, gestão, animações
+       (mesma paleta de cores; só refinamos forma, luz e movimento)
+       ================================================================ */
+
+    @keyframes pageFadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    body { animation: pageFadeIn .5s ease; }
+
+    /* Scrollbar geral com as cores da marca */
+    ::-webkit-scrollbar { width: 9px; height: 9px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #d8c9bc, #b85c38);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: #9c4a2b; }
+
+    /* ---------- NAV ---------- */
+    nav {
+      box-shadow: 0 6px 24px rgba(125, 74, 54, .06);
+      transition: box-shadow .3s ease;
+    }
+    nav a {
+      position: relative;
+      padding: 4px 2px;
+      transition: color .25s ease;
+    }
+    nav a:after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -3px;
+      width: 0;
+      height: 2px;
+      background: #b85c38;
+      border-radius: 2px;
+      transition: width .3s ease;
+    }
+    nav a:hover { color: #b85c38; }
+    nav a:hover:after,
+    nav a.active:after { width: 100%; }
+    nav a.active { color: #b85c38; }
+
+    .lang-switcher,
+    .login-btn,
+    .logout-btn,
+    .admin-btn {
+      box-shadow: 0 4px 12px rgba(184, 92, 56, .18);
+      transition: transform .2s ease, box-shadow .2s ease, background .25s ease;
+    }
+    .lang-switcher:hover,
+    .login-btn:hover,
+    .logout-btn:hover,
+    .admin-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(184, 92, 56, .28);
+    }
+    .lang-switcher:active,
+    .login-btn:active,
+    .logout-btn:active,
+    .admin-btn:active { transform: translateY(0); }
+
+    /* ---------- AVATAR (topo) ---------- */
+    .avatar-wrap {
+      transition: transform .25s ease, box-shadow .25s ease;
+      box-shadow: 0 0 0 3px rgba(184, 92, 56, .12);
+    }
+    .avatar-wrap:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 0 4px rgba(184, 92, 56, .28), 0 6px 16px rgba(184, 92, 56, .3);
+    }
+
+    /* ---------- AVATAR (modal de perfil) ---------- */
+    @keyframes avatarGlow {
+      0%, 100% { box-shadow: 0 0 0 3px #b85c38, 0 10px 26px rgba(184, 92, 56, .28); }
+      50%      { box-shadow: 0 0 0 5px #d98657, 0 14px 34px rgba(184, 92, 56, .4); }
+    }
+    .avatar-preview-circle { animation: avatarGlow 3.2s ease-in-out infinite; }
+    .avatar-preview-badge {
+      transition: transform .25s ease, background .25s ease;
+    }
+    .avatar-preview-wrap:hover .avatar-preview-badge {
+      transform: scale(1.12) rotate(-8deg);
+      background: #9c4a2b;
+    }
+
+    /* ---------- JANELAS / MODAIS ---------- */
+    @keyframes overlayFade {
+      from { background: rgba(0, 0, 0, 0); backdrop-filter: blur(0px); }
+      to   { background: rgba(0, 0, 0, .4); backdrop-filter: blur(5px); }
+    }
+    @keyframes modalPop {
+      0%   { opacity: 0; transform: translateY(18px) scale(.94); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .modal-overlay[style*="flex"] { animation: overlayFade .25s ease; }
+    .modal-overlay .modal-box { animation: modalPop .32s cubic-bezier(.2, .8, .3, 1.15); }
+    #adminModal[style*="flex"] { animation: overlayFade .25s ease; }
+
+    .modal-box {
+      position: relative;
+      box-shadow: 0 25px 70px rgba(125, 74, 54, .22), 0 2px 8px rgba(0, 0, 0, .06);
+      border: 1px solid rgba(255, 255, 255, .7);
+      overflow: hidden;
+    }
+    .modal-box:before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, #ead7c4, #b85c38, #f0d4cb);
+    }
+    .modal-box h2 { position: relative; }
+    .modal-box .close-modal {
+      transition: transform .3s ease, color .25s ease;
+    }
+    .modal-box .close-modal:hover {
+      transform: rotate(90deg);
+    }
+    .modal-box input,
+    .modal-box textarea,
+    .modal-box select {
+      transition: border-color .25s ease, box-shadow .25s ease;
+    }
+    .modal-box input:focus,
+    .modal-box textarea:focus,
+    .modal-box select:focus {
+      box-shadow: 0 0 0 4px rgba(184, 92, 56, .12);
+    }
+    .modal-box .btn-row button {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .06);
+    }
+    .modal-box .btn-row .btn-primary:hover,
+    .modal-box .admin-footer .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(184, 92, 56, .32);
+    }
+    .modal-box .btn-row .btn-secondary:hover,
+    .modal-box .admin-footer .btn-secondary:hover {
+      transform: translateY(-2px);
+    }
+    .error-msg:not(:empty) {
+      animation: errorIn .25s ease;
+    }
+    @keyframes errorIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ================================================================
+       ✦ JANELA DE GESTÃO — redesenho completo (mesma paleta de cores)
+       ================================================================ */
+    #adminModal .modal-box.admin-box {
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 80px);
+      padding: 0;
+      overflow: hidden;
+      background: #fffdf9;
+    }
+
+    /* --- cabeçalho fixo --- */
+    .admin-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 28px 60px 18px;
+      border-bottom: 1px solid #eee1d4;
+      flex-shrink: 0;
+    }
+    .admin-header h2 { margin: 0; }
+    .admin-header .close-modal {
+      position: absolute;
+      top: 50%;
+      right: 18px;
+      transform: translateY(-50%);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5ece3;
+      font-size: 22px;
+      line-height: 1;
+    }
+    .admin-header .close-modal:hover {
+      background: #ead7c4;
+      transform: translateY(-50%) rotate(90deg);
+    }
+
+    /* --- separadores em controlo segmentado --- */
+    .admin-tabs {
+      display: flex;
+      gap: 6px;
+      margin: 18px 24px 0;
+      padding: 5px;
+      border-bottom: none;
+      background: #f5ece3;
+      border-radius: 16px;
+      flex-shrink: 0;
+    }
+    .admin-tabs button {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: .88rem;
+      white-space: nowrap;
+    }
+    .admin-tabs button:before {
+      font-size: .95rem;
+    }
+    .admin-tabs button[data-tab="list"]:before { content: "📋"; }
+    .admin-tabs button[data-tab="add"]:before { content: "✎"; }
+    .admin-tabs button[data-tab="credentials"]:before { content: "🔐"; }
+    .admin-tabs button.active {
+      box-shadow: 0 6px 16px rgba(184, 92, 56, .3);
+    }
+    .admin-tabs button:hover:not(.active) {
+      background: rgba(184, 92, 56, .1);
+    }
+
+    /* --- corpo com scroll --- */
+    .admin-body {
+      padding: 22px 26px 6px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .admin-body label:first-of-type { margin-top: 0; }
+
+    /* --- rodapé fixo --- */
+    .admin-footer {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      padding: 16px 26px;
+      border-top: 1px solid #eee1d4;
+      background: #fffdf9;
+      flex-shrink: 0;
+    }
+
+    /* --- lista de poemas --- */
+    .admin-list {
+      max-height: none;
+      overflow-y: visible;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .admin-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      text-align: center;
+      padding: 50px 20px;
+      color: #a68a76;
+      font-style: italic;
+    }
+    .admin-empty-icon { font-size: 2.2rem; font-style: normal; }
+    .admin-poem-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border: 1px solid #eee1d4;
+      border-bottom: 1px solid #eee1d4;
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 3px 10px rgba(125, 74, 54, .05);
+    }
+    .admin-poem-item.pinned {
+      background: rgba(184, 92, 56, 0.06);
+      border-color: rgba(184, 92, 56, .25);
+    }
+    .admin-poem-item .info strong {
+      font-size: 1.02rem;
+      color: #3e332c;
+    }
+    .admin-poem-item .info small {
+      margin-top: 3px;
+    }
+    .admin-poem-item .actions {
+      gap: 6px;
+    }
+    .admin-poem-item .actions button {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .95rem;
+    }
+    .admin-poem-item .actions .del-btn {
+      width: auto;
+      height: auto;
+    }
+
+    /* --- formulário em grelha --- */
+    .admin-body .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 16px;
+    }
+    .admin-body .form-group { margin-bottom: 4px; }
+    .admin-body label {
+      font-size: .82rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: #a68a76;
+      font-weight: 700;
+      margin: 14px 0 6px;
+    }
+    .admin-body input,
+    .admin-body select,
+    .admin-body textarea {
+      border-radius: 12px;
+      background: #fbf6f0;
+    }
+    .admin-body textarea { resize: vertical; line-height: 1.6; }
+    .pin-check {
+      display: flex !important;
+      align-items: center;
+      gap: 10px;
+      margin: 18px 0 6px;
+      padding: 12px 14px;
+      background: #f5ece3;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #5c4c41;
+      font-size: .92rem;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+    .pin-check input { width: auto !important; accent-color: #b85c38; }
+
+    @media(max-width: 640px) {
+      .admin-body .form-grid { grid-template-columns: 1fr; }
+      .admin-header { padding: 22px 50px 16px; }
+      .admin-tabs button span { display: none; }
+      .admin-tabs button:before { margin: 0; font-size: 1.1rem; }
+    }
+
+    /* --- botões castanhos, ao estilo da janela "Foto de perfil" --- */
+    .admin-poem-item .actions button {
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      font-size: 1rem;
+      box-shadow: 0 4px 10px rgba(184, 92, 56, .12);
+    }
+    .admin-poem-item .actions .edit-btn {
+      background: #b85c38;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(184, 92, 56, .35);
+    }
+    .admin-poem-item .actions .edit-btn:hover {
+      background: #9c4a2b;
+      box-shadow: 0 6px 16px rgba(184, 92, 56, .45);
+    }
+    .admin-poem-item .actions .pin-btn {
+      background: #f5ece3;
+      color: #b85c38;
+      border: 1px solid rgba(184, 92, 56, .3);
+      box-shadow: none;
+    }
+    .admin-poem-item .actions .pin-btn:hover {
+      background: #ead7c4;
+      border-color: #b85c38;
+    }
+    .admin-poem-item .actions .pin-btn.active {
+      background: #b85c38;
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 4px 12px rgba(184, 92, 56, .35);
+    }
+    .admin-poem-item .actions .pin-btn.active:hover {
+      background: #9c4a2b;
+    }
+    .admin-poem-item .actions .del-btn {
+      width: 34px !important;
+      height: 34px !important;
+      border-radius: 12px !important;
+      background: rgba(184, 92, 56, .08) !important;
+      color: #b85c38 !important;
+      opacity: 1 !important;
+      box-shadow: none !important;
+    }
+    .admin-poem-item .actions .del-btn:hover {
+      background: rgba(184, 92, 56, .18) !important;
+      transform: scale(1.08) !important;
+    }
+
+
+    /* --- animações mantidas --- */
+    .admin-poem-item {
+      transition: background .25s ease, transform .2s ease, box-shadow .25s ease;
+    }
+    .admin-poem-item:hover {
+      background: rgba(184, 92, 56, .06);
+      transform: translateX(2px);
+      box-shadow: 0 8px 20px rgba(125, 74, 54, .1);
+    }
+    .admin-poem-item .info .pin-flag {
+      display: inline-block;
+      animation: pinBounce .5s ease;
+    }
+    @keyframes pinBounce {
+      0% { transform: scale(0) rotate(-20deg); }
+      60% { transform: scale(1.2) rotate(8deg); }
+      100% { transform: scale(1) rotate(0); }
+    }
+    .admin-poem-item .actions button {
+      transition: transform .2s ease, background .25s ease;
+    }
+    .admin-poem-item .actions button:hover {
+      transform: translateY(-2px);
+    }
+    .admin-tabs button {
+      transition: background .3s ease, color .3s ease, transform .2s ease;
+    }
+
+    /* ---------- PÁGINA INICIAL ---------- */
+    .box {
+      transition: transform .4s ease, box-shadow .4s ease;
+    }
+    .box:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 26px 60px rgba(0, 0, 0, .1);
+    }
+    h1 {
+      background: linear-gradient(135deg, #7d4a36, #b85c38);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .btn {
+      transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+    }
+    .btn.primary { box-shadow: 0 8px 20px rgba(184, 92, 56, .3); }
+    .btn.primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 28px rgba(184, 92, 56, .4);
+      background: #9c4a2b;
+    }
+    .btn.secondary:hover {
+      transform: translateY(-3px);
+      background: rgba(184, 92, 56, .08);
+    }
+    .card {
+      transition: transform .35s ease, box-shadow .35s ease, border-color .35s ease;
+    }
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 18px 40px rgba(125, 74, 54, .14);
+      border-color: rgba(184, 92, 56, .3);
+    }
+    .card h3 { transition: color .25s ease; }
+    .card:hover h3 { color: #b85c38; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="lang-pt">Início</a>
+    <a href="index.html" class="lang-en hidden">Home</a>
+    <a href="poemas.html" class="lang-pt">Poemas</a>
+    <a href="poemas.html" class="lang-en hidden">Poems</a>
+    <a href="sobre.html" class="lang-pt">Sobre Nós</a>
+    <a href="sobre.html" class="lang-en hidden">About Us</a>
+
+    <div class="nav-buttons">
+      <div class="avatar-wrap hidden" id="avatarWrap" onclick="openAvatarModal()" title="Alterar avatar">
+        <img id="userAvatar" src="" alt="avatar" />
+      </div>
+      <span class="user-greeting" id="greeting"></span>
+      <button class="login-btn" id="loginBtn" onclick="openLoginModal()">Entrar</button>
+      <button class="logout-btn hidden" id="logoutBtn" onclick="logout()">Logout</button>
+      <button class="admin-btn hidden" id="adminBtn" onclick="openAdminModal()">⚙️</button>
+      <button class="lang-switcher" onclick="toggleLanguage()">EN</button>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="box">
+      <h1>Versos & Cochichos</h1>
+      <div class="line"></div>
+      <p class="lead lang-pt">Um lugar onde cada poema nasce do silêncio, transforma sentimentos em palavras e convida o leitor a ficar mais um instante.</p>
+      <p class="lead lang-en hidden">A place where each poem is born from silence, transforms feelings into words and invites the reader to stay a moment longer.</p>
+      <div class="btns">
+        <a class="btn primary lang-pt" href="poemas.html">Ler Poemas</a>
+        <a class="btn primary lang-en hidden" href="poemas.html">Read Poems</a>
+        <a class="btn secondary lang-pt" href="sobre.html">Sobre Nós</a>
+        <a class="btn secondary lang-en hidden" href="sobre.html">About Us</a>
+      </div>
+      <p class="quote lang-pt">“Há palavras que não gritam. Apenas ficam.”</p>
+      <p class="quote lang-en hidden">“There are words that do not shout. They just stay.”</p>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="card">
+      <h3 class="lang-pt">✦ Poesia</h3>
+      <h3 class="lang-en hidden">✦ Poetry</h3>
+      <p class="lang-pt">Versos originais escritos com calma e emoção.</p>
+      <p class="lang-en hidden">Original verses written with calm and emotion.</p>
+    </div>
+    <div class="card">
+      <h3 class="lang-pt">☾ Reflexão</h3>
+      <h3 class="lang-en hidden">☾ Reflection</h3>
+      <p class="lang-pt">Textos para ler devagar e voltar a eles quando precisares.</p>
+      <p class="lang-en hidden">Texts to read slowly and return to whenever you need.</p>
+    </div>
+    <div class="card">
+      <h3 class="lang-pt">❦ Inspiração</h3>
+      <h3 class="lang-en hidden">❦ Inspiration</h3>
+      <p class="lang-pt">Um espaço minimalista onde a escrita é a protagonista.</p>
+      <p class="lang-en hidden">A minimalist space where writing takes center stage.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span class="lang-pt">© 2026 Versos & Cochichos • Feito com poesia.</span>
+    <span class="lang-en hidden">© 2026 Versos & Cochichos • Made with poetry.</span>
+  </footer>
+
+  <!-- Modal Login -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal-box">
+      <button class="close-modal" onclick="closeModal('loginModal')">&times;</button>
+      <h2 class="lang-pt">Login</h2>
+      <h2 class="lang-en hidden">Login</h2>
+      <label class="lang-pt">Nome de utilizador</label>
+      <label class="lang-en hidden">Username</label>
+      <input type="text" id="loginUser" placeholder="" />
+      <label class="lang-pt">Palavra-passe</label>
+      <label class="lang-en hidden">Password</label>
+      <input type="password" id="loginPass" />
+      <div id="loginError" class="error-msg"></div>
+      <div class="btn-row">
+        <button class="btn-secondary" id="cancelLoginBtn" onclick="closeModal('loginModal')">Cancelar</button>
+        <button class="btn-primary" id="loginSubmitBtn" onclick="login()">Entrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Avatar -->
+  <div class="modal-overlay" id="avatarModal">
+    <div class="modal-box">
+      <button class="close-modal" onclick="closeModal('avatarModal')">&times;</button>
+      <h2 class="lang-pt">Foto de perfil</h2>
+      <h2 class="lang-en hidden">Profile picture</h2>
+      <div class="avatar-preview-wrap" onclick="document.getElementById('avatarUrlInput').focus()">
+        <div class="avatar-preview-circle" id="avatarPreviewCircle">
+          <img id="avatarPreviewImg" src="" alt="" />
+        </div>
+        <div class="avatar-preview-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+        </div>
+      </div>
+      <label class="avatar-input-label lang-pt">Link da imagem ou GIF</label>
+      <label class="avatar-input-label lang-en hidden">Image or GIF link</label>
+      <input type="text" class="avatar-url-input" id="avatarUrlInput" placeholder="https://exemplo.com/imagem.gif" oninput="updateAvatarPreview()" />
+      <div id="avatarError" class="error-msg"></div>
+      <div class="btn-row">
+        <button class="btn-secondary" id="cancelAvatarBtn" onclick="closeModal('avatarModal')">Cancelar</button>
+        <button class="btn-primary" id="saveAvatarBtn" onclick="saveAvatar()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Admin -->
+  <div class="modal-overlay" id="adminModal">
+    <div class="modal-box admin-box" style="max-width:760px;">
+      <div class="admin-header">
+        <h2 class="lang-pt">Gestão</h2>
+        <h2 class="lang-en hidden">Management</h2>
+        <button class="close-modal" onclick="closeModal('adminModal')">&times;</button>
+      </div>
+
+      <div class="admin-tabs">
+        <button class="active" data-tab="list" onclick="switchAdminTab('list')"><span class="lang-pt">Lista</span><span class="lang-en hidden">List</span></button>
+        <button data-tab="add" onclick="switchAdminTab('add')"><span class="lang-pt">Adicionar</span><span class="lang-en hidden">Add</span></button>
+        <button data-tab="credentials" onclick="switchAdminTab('credentials')"><span class="lang-pt">Credenciais</span><span class="lang-en hidden">Credentials</span></button>
+      </div>
+
+      <div class="admin-body">
+        <div id="adminTabList">
+          <div class="admin-list" id="adminPoemList"></div>
+        </div>
+
+        <div id="adminTabAdd" style="display:none;">
+          <input type="hidden" id="editPoemId" value="" />
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="lang-pt">Título (PT)</label>
+              <label class="lang-en hidden">Title (PT)</label>
+              <input type="text" id="poemTitlePt" />
+            </div>
+            <div class="form-group">
+              <label class="lang-pt">Título (EN)</label>
+              <label class="lang-en hidden">Title (EN)</label>
+              <input type="text" id="poemTitleEn" />
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="lang-pt">Autor (chave)</label>
+              <label class="lang-en hidden">Author (key)</label>
+              <select id="poemAuthor">
+                <option value="sofia">Neko</option>
+                <option value="miguel">Lakenya</option>
+                <option value="anónimo">Anónimo</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="lang-pt">Data do poema</label>
+              <label class="lang-en hidden">Poem date</label>
+              <input type="date" id="poemDate" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="lang-pt">Texto (PT)</label>
+            <label class="lang-en hidden">Text (PT)</label>
+            <textarea id="poemTextPt" rows="5"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="lang-pt">Texto (EN)</label>
+            <label class="lang-en hidden">Text (EN)</label>
+            <textarea id="poemTextEn" rows="5"></textarea>
+          </div>
+          <label class="pin-check">
+            <input type="checkbox" id="poemPinned" />
+            <span class="lang-pt">Fixar este poema no topo</span>
+            <span class="lang-en hidden">Pin this poem to the top</span>
+          </label>
+        </div>
+
+        <div id="adminTabCredentials" style="display:none;">
+          <div class="form-group">
+            <label class="lang-pt">Nome de exibição</label>
+            <label class="lang-en hidden">Display name</label>
+            <input type="text" id="displayNameInput" />
+          </div>
+          <div class="form-group">
+            <label class="lang-pt">Nova palavra-passe</label>
+            <label class="lang-en hidden">New password</label>
+            <input type="password" id="newPasswordInput" autocomplete="new-password" />
+          </div>
+          <div id="credMsg" class="error-msg" style="color:#2a5c6e;"></div>
+        </div>
+      </div>
+
+      <div class="admin-footer" id="adminFooterList">
+        <button class="btn-secondary" onclick="closeModal('adminModal')"><span class="lang-pt">Fechar</span><span class="lang-en hidden">Close</span></button>
+      </div>
+      <div class="admin-footer" id="adminFooterAdd" style="display:none;">
+        <button class="btn-secondary" onclick="clearEditForm()"><span class="lang-pt">Cancelar</span><span class="lang-en hidden">Cancel</span></button>
+        <button class="btn-primary" onclick="savePoem()"><span class="lang-pt">Guardar</span><span class="lang-en hidden">Save</span></button>
+      </div>
+      <div class="admin-footer" id="adminFooterCredentials" style="display:none;">
+        <button class="btn-primary" onclick="updateCredentials()"><span class="lang-pt">Atualizar</span><span class="lang-en hidden">Update</span></button>
+      </div>
+    </div>
+  </div>
+  <script>
+    // ================================================================
+    //  FIREBASE CONFIG – substituída pela tua
+    // ================================================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyAXZBAt62zDnibJCqq932HP03ECRrH5m6o",
+      authDomain: "versos-cochichos-80343.firebaseapp.com",
+      projectId: "versos-cochichos-80343",
+      storageBucket: "versos-cochichos-80343.firebasestorage.app",
+      messagingSenderId: "406682495075",
+      appId: "1:406682495075:web:c1a3beb10f963a5dc8f056",
+      measurementId: "G-HHXWSG3L52"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // ================================================================
+    //  Mapeamento username -> email
+    // ================================================================
+    const USER_EMAIL_MAP = {
+      'Neko': 'neko@versos.com',
+      'Lakenya': 'lakenya@versos.com'
+    };
+
+    // ================================================================
+    //  ESTADO GLOBAL
+    // ================================================================
+    let currentUser = null; // { username, displayName, avatar, uid, email }
+    let currentLang = localStorage.getItem('preferredLang') || 'pt';
+    const DEFAULT_AVATAR = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">' +
+      '<rect width="40" height="40" fill="#e8ddd2"/>' +
+      '<circle cx="20" cy="15" r="7" fill="#b85c38"/>' +
+      '<path d="M6 36c0-9 6-14 14-14s14 5 14 14" fill="#b85c38"/>' +
+      '</svg>'
+    );
+
+    let poems = [];
+    let poemsLoaded = false;
+
+    // Escapa HTML para impedir injeção de código (XSS) nos campos geridos pelo admin.
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+    // ================================================================
+    //  AUTENTICAÇÃO
+    // ================================================================
+    async function syncUserProfile(user) {
+      if (!user) return;
+      const username = Object.keys(USER_EMAIL_MAP).find(k => USER_EMAIL_MAP[k] === user.email);
+      if (!username) return;
+      const userRef = db.collection('users').doc(username);
+      const doc = await userRef.get();
+      const data = doc.exists ? doc.data() : { displayName: username, avatar: '' };
+      if (!doc.exists) {
+        await userRef.set({ displayName: username, avatar: '', uid: user.uid });
+      } else {
+        if (data.uid !== user.uid) await userRef.update({ uid: user.uid });
+      }
+      currentUser = {
+        username: username,
+        displayName: data.displayName || username,
+        avatar: data.avatar || '',
+        uid: user.uid,
+        email: user.email
+      };
+      updateUI();
+    }
+
+    async function login() {
+      const username = document.getElementById('loginUser').value.trim();
+      const password = document.getElementById('loginPass').value.trim();
+      const errEl = document.getElementById('loginError');
+      errEl.textContent = '';
+
+      if (!username || !password) {
+        errEl.textContent = currentLang === 'en' ? 'Fill in all fields.' : 'Preenche todos os campos.';
+        return;
+      }
+      const email = USER_EMAIL_MAP[username];
+      if (!email) {
+        errEl.textContent = currentLang === 'en' ? 'Unknown user.' : 'Utilizador desconhecido.';
+        return;
+      }
+
+      try {
+        const cred = await auth.signInWithEmailAndPassword(email, password);
+        await syncUserProfile(cred.user);
+        closeModal('loginModal');
+        document.getElementById('loginPass').value = '';
+        document.getElementById('loginUser').value = '';
+      } catch (error) {
+        if (error.code === 'auth/user-not-found') {
+          try {
+            const cred = await auth.createUserWithEmailAndPassword(email, password);
+            await db.collection('users').doc(username).set({ displayName: username, avatar: '', uid: cred.user.uid });
+            await syncUserProfile(cred.user);
+            closeModal('loginModal');
+            document.getElementById('loginPass').value = '';
+            document.getElementById('loginUser').value = '';
+          } catch (createError) {
+            errEl.textContent = createError.message;
+          }
+        } else {
+          errEl.textContent = error.message;
+        }
+      }
+    }
+
+    async function logout() {
+      await auth.signOut();
+      currentUser = null;
+      updateUI();
+    }
+
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        await syncUserProfile(user);
+      } else {
+        currentUser = null;
+        updateUI();
+      }
+    });
+
+    // ================================================================
+    //  AVATAR
+    // ================================================================
+    function openAvatarModal() {
+      if (!currentUser) return;
+      document.getElementById('avatarUrlInput').value = currentUser.avatar || '';
+      document.getElementById('avatarError').textContent = '';
+      document.getElementById('avatarModal').style.display = 'flex';
+      updateAvatarPreview();
+    }
+
+    function updateAvatarPreview() {
+      const url = document.getElementById('avatarUrlInput').value.trim();
+      const img = document.getElementById('avatarPreviewImg');
+      img.onerror = function() { this.onerror = null; this.src = DEFAULT_AVATAR; };
+      img.src = url || DEFAULT_AVATAR;
+    }
+
+    async function saveAvatar() {
+      if (!currentUser) return;
+      const url = document.getElementById('avatarUrlInput').value.trim();
+      try {
+        await db.collection('users').doc(currentUser.username).update({ avatar: url });
+        currentUser.avatar = url;
+        updateUI();
+        closeModal('avatarModal');
+      } catch (e) {
+        document.getElementById('avatarError').textContent = e.message;
+      }
+    }
+
+    // ================================================================
+    //  UI
+    // ================================================================
+    function updateUI() {
+      const greeting = document.getElementById('greeting');
+      const loginBtn = document.getElementById('loginBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const adminBtn = document.getElementById('adminBtn');
+      const avatarWrap = document.getElementById('avatarWrap');
+      const userAvatar = document.getElementById('userAvatar');
+
+      if (currentUser) {
+        greeting.textContent = currentUser.displayName;
+        userAvatar.src = currentUser.avatar || DEFAULT_AVATAR;
+        userAvatar.onerror = function() { this.onerror = null; this.src = DEFAULT_AVATAR; };
+        avatarWrap.classList.remove('hidden');
+        loginBtn.classList.add('hidden');
+        logoutBtn.classList.remove('hidden');
+        adminBtn.classList.remove('hidden');
+      } else {
+        greeting.textContent = '';
+        avatarWrap.classList.add('hidden');
+        loginBtn.classList.remove('hidden');
+        logoutBtn.classList.add('hidden');
+        adminBtn.classList.add('hidden');
+      }
+      applyLanguage(currentLang);
+    }
+
+    // ================================================================
+    //  IDIOMA
+    // ================================================================
+    function toggleLanguage() {
+      currentLang = (currentLang === 'pt') ? 'en' : 'pt';
+      localStorage.setItem('preferredLang', currentLang);
+      applyLanguage(currentLang);
+    }
+
+    function applyLanguage(lang) {
+      const ptElements = document.querySelectorAll('.lang-pt');
+      const enElements = document.querySelectorAll('.lang-en');
+      const btn = document.querySelector('.lang-switcher');
+      if (lang === 'en') {
+        ptElements.forEach(el => el.classList.add('hidden'));
+        enElements.forEach(el => el.classList.remove('hidden'));
+        if (btn) btn.textContent = 'PT';
+      } else {
+        enElements.forEach(el => el.classList.add('hidden'));
+        ptElements.forEach(el => el.classList.remove('hidden'));
+        if (btn) btn.textContent = 'EN';
+      }
+
+      const loginNavBtn = document.getElementById('loginBtn');
+      if (loginNavBtn) {
+        loginNavBtn.textContent = lang === 'en' ? 'Login' : 'Entrar';
+      }
+
+      const logoutNavBtn = document.getElementById('logoutBtn');
+      if (logoutNavBtn) {
+        logoutNavBtn.textContent = lang === 'en' ? 'Logout' : 'Sair';
+      }
+
+      const cancelBtn = document.getElementById('cancelLoginBtn');
+      const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+      if (cancelBtn) cancelBtn.textContent = lang === 'en' ? 'Cancel' : 'Cancelar';
+      if (loginSubmitBtn) loginSubmitBtn.textContent = lang === 'en' ? 'Login' : 'Entrar';
+
+      const cancelAvatarBtn = document.getElementById('cancelAvatarBtn');
+      const saveAvatarBtn = document.getElementById('saveAvatarBtn');
+      if (cancelAvatarBtn) cancelAvatarBtn.textContent = lang === 'en' ? 'Cancel' : 'Cancelar';
+      if (saveAvatarBtn) saveAvatarBtn.textContent = lang === 'en' ? 'Save' : 'Guardar';
+
+      if (currentUser) {
+        document.getElementById('greeting').textContent = currentUser.displayName;
+      }
+    }
+
+    // ================================================================
+    //  MODAIS
+    // ================================================================
+    function openLoginModal() {
+      document.getElementById('loginModal').style.display = 'flex';
+      document.getElementById('loginError').textContent = '';
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    window.onclick = function(e) {
+      if (e.target.classList.contains('modal-overlay')) {
+        e.target.style.display = 'none';
+      }
+    };
+
+    // ================================================================
+    //  ADMIN - POEMAS (gestão acessível a partir de qualquer página)
+    // ================================================================
+    async function ensurePoemsLoaded() {
+      if (poemsLoaded) return;
+      const snapshot = await db.collection('poems').get();
+      poems = [];
+      snapshot.forEach(doc => poems.push({ id: doc.id, ...doc.data() }));
+      poemsLoaded = true;
+    }
+
+    function getSortedPoems(list) {
+      return [...list].sort((a, b) => {
+        const pa = a.pinned ? 1 : 0;
+        const pb = b.pinned ? 1 : 0;
+        if (pa !== pb) return pb - pa;
+        const da = a.date ? new Date(a.date).getTime() : 0;
+        const db_ = b.date ? new Date(b.date).getTime() : 0;
+        return db_ - da;
+      });
+    }
+
+    function formatPoemDate(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length !== 3) return dateStr;
+      const [y, m, d] = parts;
+      return currentLang === 'en' ? (m + '/' + d + '/' + y) : (d + '/' + m + '/' + y);
+    }
+
+    async function openAdminModal() {
+      if (!currentUser) {
+        alert(currentLang === 'en' ? 'Please login first.' : 'Por favor, faz login primeiro.');
+        return;
+      }
+      document.getElementById('adminModal').style.display = 'flex';
+      await ensurePoemsLoaded();
+      renderAdminList();
+      switchAdminTab('list');
+      const usersRef = db.collection('users').doc(currentUser.username);
+      usersRef.get().then(doc => {
+        if (doc.exists) {
+          document.getElementById('displayNameInput').value = doc.data().displayName || currentUser.username;
+        }
+      });
+      document.getElementById('newPasswordInput').value = '';
+      document.getElementById('credMsg').textContent = '';
+    }
+
+    function renderAdminList() {
+      const container = document.getElementById('adminPoemList');
+      container.innerHTML = '';
+      const sorted = getSortedPoems(poems);
+      if (!sorted.length) {
+        container.innerHTML = '<div class="admin-empty">' +
+          '<span class="admin-empty-icon">🖋️</span>' +
+          '<span class="lang-pt">Ainda não há poemas. Usa o separador «Adicionar».</span>' +
+          '<span class="lang-en hidden">No poems yet. Use the “Add” tab.</span>' +
+          '</div>';
+        applyLanguage(currentLang);
+        return;
+      }
+      sorted.forEach(p => {
+        const div = document.createElement('div');
+        div.className = 'admin-poem-item' + (p.pinned ? ' pinned' : '');
+        const authorLabel = p.author === 'sofia' ? 'Neko' : (p.author === 'miguel' ? 'Lakenya' : 'Anónimo');
+        const dateLabel = formatPoemDate(p.date);
+        div.innerHTML = `
+          <div class="info">
+            <strong>${p.pinned ? '<span class="pin-flag">📌</span>' : ''}${escapeHtml(p.title_pt)}</strong>
+            <small>${authorLabel} • ${p.likes || 0} ❤️${dateLabel ? ' • ' + dateLabel : ''}</small>
+          </div>
+          <div class="actions">
+            <button class="pin-btn${p.pinned ? ' active' : ''}" onclick="togglePin('${p.id}')" title="${currentLang === 'en' ? 'Pin to top' : 'Fixar no topo'}">📌</button>
+            <button class="edit-btn" onclick="editPoem('${p.id}')">✎</button>
+            <button class="del-btn" onclick="deletePoem('${p.id}')">🗑</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    async function togglePin(id) {
+      const p = poems.find(x => x.id === id);
+      if (!p) return;
+      const newVal = !p.pinned;
+      await db.collection('poems').doc(id).update({ pinned: newVal });
+      p.pinned = newVal;
+      renderAdminList();
+    }
+
+    function editPoem(id) {
+      const p = poems.find(x => x.id === id);
+      if (!p) return;
+      document.getElementById('editPoemId').value = id;
+      document.getElementById('poemTitlePt').value = p.title_pt;
+      document.getElementById('poemTitleEn').value = p.title_en;
+      document.getElementById('poemAuthor').value = p.author;
+      document.getElementById('poemTextPt').value = p.text_pt;
+      document.getElementById('poemTextEn').value = p.text_en;
+      document.getElementById('poemDate').value = p.date || '';
+      document.getElementById('poemPinned').checked = !!p.pinned;
+      switchAdminTab('add');
+    }
+
+    async function deletePoem(id) {
+      if (!confirm(currentLang === 'en' ? 'Delete this poem?' : 'Apagar este poema?')) return;
+      await db.collection('poems').doc(id).delete();
+      poems = poems.filter(p => p.id !== id);
+      renderAdminList();
+    }
+
+    function clearEditForm() {
+      document.getElementById('editPoemId').value = '';
+      document.getElementById('poemTitlePt').value = '';
+      document.getElementById('poemTitleEn').value = '';
+      document.getElementById('poemAuthor').value = 'sofia';
+      document.getElementById('poemTextPt').value = '';
+      document.getElementById('poemTextEn').value = '';
+      document.getElementById('poemDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('poemPinned').checked = false;
+      switchAdminTab('list');
+    }
+
+    async function savePoem() {
+      const id = document.getElementById('editPoemId').value;
+      const title_pt = document.getElementById('poemTitlePt').value.trim();
+      const title_en = document.getElementById('poemTitleEn').value.trim();
+      const author = document.getElementById('poemAuthor').value;
+      const text_pt = document.getElementById('poemTextPt').value.trim();
+      const text_en = document.getElementById('poemTextEn').value.trim();
+      const date = document.getElementById('poemDate').value || new Date().toISOString().split('T')[0];
+      const pinned = document.getElementById('poemPinned').checked;
+      if (!title_pt || !text_pt) {
+        alert(currentLang === 'en' ? 'Title and text (PT) are required.' : 'Título e texto (PT) são obrigatórios.');
+        return;
+      }
+      const data = {
+        author,
+        title_pt,
+        title_en: title_en || title_pt,
+        text_pt,
+        text_en: text_en || text_pt,
+        date,
+        pinned,
+        likes: 0,
+        likedBy: [],
+        comments: []
+      };
+      if (id) {
+        const p = poems.find(x => x.id === id);
+        if (p) {
+          await db.collection('poems').doc(id).update({
+            author,
+            title_pt,
+            title_en: title_en || title_pt,
+            text_pt,
+            text_en: text_en || text_pt,
+            date,
+            pinned
+          });
+          p.title_pt = title_pt;
+          p.title_en = title_en || title_pt;
+          p.author = author;
+          p.text_pt = text_pt;
+          p.text_en = text_en || text_pt;
+          p.date = date;
+          p.pinned = pinned;
+        }
+      } else {
+        const newId = 'p' + Date.now();
+        await db.collection('poems').doc(newId).set({ ...data, id: newId });
+        poems.push({ ...data, id: newId });
+      }
+      clearEditForm();
+      renderAdminList();
+    }
+
+    async function updateCredentials() {
+      const displayName = document.getElementById('displayNameInput').value.trim();
+      const newPass = document.getElementById('newPasswordInput').value.trim();
+      const msg = document.getElementById('credMsg');
+      msg.textContent = '';
+      msg.style.color = '#2a5c6e';
+
+      if (!currentUser) {
+        msg.textContent = currentLang === 'en' ? 'Not logged in.' : 'Não estás autenticado.';
+        return;
+      }
+
+      try {
+        if (displayName) {
+          await db.collection('users').doc(currentUser.username).update({ displayName });
+          currentUser.displayName = displayName;
+        }
+
+        const passStrongEnough = pw => pw.length >= 8 && /[a-zA-Z]/.test(pw) && /[0-9]/.test(pw);
+
+        if (newPass && passStrongEnough(newPass)) {
+          const user = auth.currentUser;
+          if (user) {
+            const currentPass = prompt(currentLang === 'en' ? 'Enter your current password to change it:' : 'Introduz a tua palavra-passe atual para a alterar:');
+            if (!currentPass) {
+              msg.textContent = currentLang === 'en' ? 'Current password required.' : 'Palavra-passe atual necessária.';
+              return;
+            }
+            const credential = firebase.auth.EmailAuthProvider.credential(user.email, currentPass);
+            await user.reauthenticateWithCredential(credential);
+            await user.updatePassword(newPass);
+            msg.textContent = currentLang === 'en' ? 'Credentials updated!' : 'Credenciais atualizadas!';
+          }
+        } else if (newPass && !passStrongEnough(newPass)) {
+          msg.textContent = currentLang === 'en'
+            ? 'Password must be at least 8 characters and include a letter and a number.'
+            : 'A palavra-passe deve ter pelo menos 8 caracteres e incluir uma letra e um número.';
+          return;
+        }
+        updateUI();
+        document.getElementById('greeting').textContent = currentUser.displayName;
+      } catch (e) {
+        msg.textContent = e.message;
+      }
+    }
+
+    function switchAdminTab(tab) {
+      document.querySelectorAll('.admin-tabs button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.admin-tabs button[data-tab="' + tab + '"]').forEach(b => b.classList.add('active'));
+      document.getElementById('adminTabList').style.display = tab === 'list' ? 'block' : 'none';
+      document.getElementById('adminTabAdd').style.display = tab === 'add' ? 'block' : 'none';
+      document.getElementById('adminTabCredentials').style.display = tab === 'credentials' ? 'block' : 'none';
+      document.getElementById('adminFooterList').style.display = tab === 'list' ? 'flex' : 'none';
+      document.getElementById('adminFooterAdd').style.display = tab === 'add' ? 'flex' : 'none';
+      document.getElementById('adminFooterCredentials').style.display = tab === 'credentials' ? 'flex' : 'none';
+      if (tab === 'list') renderAdminList();
+      if (tab === 'add' && !document.getElementById('editPoemId').value && !document.getElementById('poemDate').value) {
+        document.getElementById('poemDate').value = new Date().toISOString().split('T')[0];
+      }
+      if (tab === 'credentials') {
+        db.collection('users').doc(currentUser?.username).get().then(doc => {
+          if (doc.exists) {
+            document.getElementById('displayNameInput').value = doc.data().displayName || currentUser?.username || '';
+          }
+        });
+        document.getElementById('newPasswordInput').value = '';
+        document.getElementById('credMsg').textContent = '';
+      }
+    }
+    // ================================================================
+    //  INICIALIZAÇÃO
+    // ================================================================
+    function highlightActiveNav() {
+      const path = location.pathname.split('/').pop() || 'index.html';
+      document.querySelectorAll('nav a').forEach(a => {
+        const href = a.getAttribute('href');
+        a.classList.toggle('active', href === path || (path === '' && href === 'index.html'));
+      });
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      applyLanguage(currentLang);
+      highlightActiveNav();
+    });
+  </script>
+</body>
+</html>
